@@ -36,7 +36,21 @@
         //construire une table contenant les personnes
         console.log(graph);
 
-        //var personnes = [];
+        var scrutin2015 = [];
+        var year
+
+        for (var i = 0; i<graph.scrutins.scrutin.length;i++) {
+
+            year = graph.scrutins.scrutin[i].dateScrutin.slice(0,4);
+            //console.log(year);
+            if (year == "2015")
+            {
+                scrutin2015.push(graph.scrutins.scrutin[i]);
+            }
+
+        }
+
+            //var personnes = [];
         var vPours = [];
         var vContres = [];
         //console.log("test2 : " +  graph.scrutins.scrutin.length);
@@ -44,33 +58,60 @@
             //console.log(i);
             vPours.length = 0;
             vContres.length =0;
+            var votesParGrp;
+            var compteurPour = 0;
+            var compteurContre = 0;
+
             for (var j = 0; j<graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe.length;j++) //parcours des groupes
             {
-                //console.log(graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].organeRef);
+                votesParGrp = graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif;
 
-                if (graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif.contres != null)
+                if (votesParGrp.contres !== null)
                 {
-
-                    for (var k = 0; k < graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif.contres.votant.length; k++) {
-                        vContres.push(graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif.contres.votant[k].acteurRef);
-                    }
-
-                }
-
-                if (graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif.pours != null)
-                {
-                    for (var l = 0; l < graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif.pours.votant.length; l++) {
-                        vPours.push(graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif.pours.votant[l].acteurRef);
+                    for (var k = 0; k < votesParGrp.contres.votant.length; k++) {
+                        vContres.push(votesParGrp.contres.votant[k].acteurRef);
+                        compteurContre++;
                     }
                 }
-                if (i == 1) {
-                    console.log(j);
+
+                if (votesParGrp.pours !== null)
+                {
+                    if (!(votesParGrp.pours.votant instanceof Array)) {
+                        console.log("JE NE SAIS PAS ECRIRE UN JSON !!!!");
+                    }
+                    for (var l = 0; l < votesParGrp.pours.votant.length; l++) {
+                        if (i == 1)
+                            console.log("ELEPHANT!!!!!")
+                        vPours.push(votesParGrp.pours.votant[l].acteurRef);
+                        compteurPour++;
+                    }
+                    if(i == 1)
+                        console.log(compteurPour)
                 }
+
+                //if (i == 1) {
+                /*    console.log("///Groupe n°" + j);
+                    console.log("POUR : " + compteurPour);
+                    console.log("taille tab pour " + vPours.length);
+                    console.log("CONTRE : " + compteurContre);
+                    console.log("taille tab contre " + vContres.length);
+                    console.log("//////");*/
+               // }
+
+                /*console.log("après le second if: " + compteurContre);
+                if (i == 1){
+                    console.log("dans le troisème if: " + compteurContre);
+                    console.log("POUR : " + compteurPour);
+                    console.log("CONTRE : " + compteurContre);
+                }*/
             }
 
-            if (i == 1){
-                console.log(vPours);
-                console.log(vContres);
+            if (i == 1) {
+                console.log("****************************************************** Scrutin n°" + i);
+                console.log("POUR : " + compteurPour);
+                console.log("taille tab pour " + vPours.length);
+                console.log("CONTRE : " + compteurContre);
+                console.log("taille tab contre " + vContres.length);
             }
 
             //parcours des tableaux vPours et vContres pour créer les paires de votants
