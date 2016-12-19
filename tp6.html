@@ -28,16 +28,16 @@
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceCenter(width / 2, height / 2));
 
-    function searchActors(votes, actors){
+    var acteurs = {};
 
-        var index = -1;
-        for (var i =  0; i<votes.length; i++){
-            if (votes[i].actors == actors){
-                index = i;
-            }
-        }
-        return index;
-    }
+    d3.json("acteurs_simple2.json", function(error, data){
+        if(error) throw  error;
+
+        console.log (data);
+
+    });
+
+    console.log(acteurs);
 
     d3.json("scrutins.json", function(error, graph) {
         if (error) throw error;
@@ -50,7 +50,7 @@
         var scrutin2015 = [];
         var year;
         var votesCommuns = {};
-        var index;
+        var personnes = [];
 
         for (var i = 0; i<graph.scrutins.scrutin.length;i++) {
 
@@ -113,6 +113,8 @@
 
             //parcours des tableaux vPours et vContres pour créer les paires de votants
             for (var m = 0; m < vPours.length; m++) {
+
+
                 for (var n = m + 1; n < vPours.length; n++) {
                     if (vPours[m] < vPours[n]) {
                         var ch = vPours[m] + "_" + vPours[n];
@@ -130,6 +132,7 @@
             }
 
             for (var m = 0; m < vContres.length; m++) {
+
                 for (var n = m + 1; n < vContres.length; n++) {
                     if (vContres[m] < vContres[n]) {
                         var ch = vContres[m] + "_" + vContres[n];
@@ -148,7 +151,7 @@
             }
 
         }
-        //console.log(votesCommuns);
+        console.log(personnes);
 
         var vcSup20 = {};
 
@@ -158,19 +161,45 @@
             }
         }
 
-        console.log(vcSup20);
+        //construction des objets nodes et links
+
+        var grph = {};
+
+        grph.links = [];
+
+        for (var key in vcSup20) {
+
+            var actors = key.split("_");
+
+            if (personnes.indexOf(actors[0]) == -1){
+                personnes.push(actors[0]);
+            }
+
+            if (personnes.indexOf(actors[1]) == -1){
+                personnes.push(actors[1]);
+            }
+
+            grph.links.push({source : actors[0], target : actors[1], value : vcSup20[key]});
+        }
+
+        grph.nodes = [];
+
+        for (var o = 0; o<personnes.length; o++){
+            grph.nodes.push({id: personnes[o], group : 1});
+        }
+
 
       var link = svg.append("g")
        .attr("class", "links")
        .selectAll("line")
-       .data(graph.links)
+       .data(grph.links)
        .enter().append("line")
        .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
 
        var node = svg.append("g")
        .attr("class", "nodes")
        .selectAll("circle")
-       .data(graph.acteurs)
+       .data(grph.nodes)
        .enter().append("circle")
        .attr("r", 5)
        .attr("fill", function(d) { return d; })
@@ -183,11 +212,11 @@
        .text(function(d) { return d.id; });
 
        simulation
-       .nodes(graph.nodes)
+       .nodes(grph.nodes)
        .on("tick", ticked);
 
        simulation.force("link")
-       .links(graph.links);
+       .links(grph.links);
 
        function ticked() {
        link
@@ -220,5 +249,3 @@
     }
 
 </script>
-
-TP6 Dataviz :)
