@@ -28,6 +28,17 @@
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceCenter(width / 2, height / 2));
 
+    function searchActors(votes, actors){
+
+        var index = -1;
+        for (var i =  0; i<votes.length; i++){
+            if (votes[i].actors == actors){
+                index = i;
+            }
+        }
+        return index;
+    }
+
     d3.json("scrutins.json", function(error, graph) {
         if (error) throw error;
 
@@ -37,7 +48,9 @@
         console.log(graph);
 
         var scrutin2015 = [];
-        var year
+        var year;
+        var votesCommuns = {};
+        var index;
 
         for (var i = 0; i<graph.scrutins.scrutin.length;i++) {
 
@@ -50,11 +63,10 @@
 
         }
 
-            //var personnes = [];
         var vPours = [];
         var vContres = [];
         //console.log("test2 : " +  graph.scrutins.scrutin.length);
-        for (var i = 0; i<graph.scrutins.scrutin.length;i++){ // parcours des scrutins
+        for (var i = 0; i<scrutin2015.length;i++){ // parcours des scrutins
             //console.log(i);
             vPours.length = 0;
             vContres.length =0;
@@ -62,12 +74,16 @@
             var compteurPour = 0;
             var compteurContre = 0;
 
-            for (var j = 0; j<graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe.length;j++) //parcours des groupes
+            for (var j = 0; j<scrutin2015[i].ventilationVotes.organe.groupes.groupe.length;j++) //parcours des groupes
             {
-                votesParGrp = graph.scrutins.scrutin[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif;
+                votesParGrp = scrutin2015[i].ventilationVotes.organe.groupes.groupe[j].vote.decompteNominatif;
 
                 if (votesParGrp.contres !== null)
                 {
+                    if (!(votesParGrp.contres.votant instanceof Array)) {
+                        vPours.push(votesParGrp.contres.votant.acteurRef);
+                        compteurContre++;
+                    }
                     for (var k = 0; k < votesParGrp.contres.votant.length; k++) {
                         vContres.push(votesParGrp.contres.votant[k].acteurRef);
                         compteurContre++;
@@ -77,33 +93,14 @@
                 if (votesParGrp.pours !== null)
                 {
                     if (!(votesParGrp.pours.votant instanceof Array)) {
-                        console.log("JE NE SAIS PAS ECRIRE UN JSON !!!!");
+                        vPours.push(votesParGrp.pours.votant.acteurRef);
+                        compteurPour++;
                     }
                     for (var l = 0; l < votesParGrp.pours.votant.length; l++) {
-                        if (i == 1)
-                            console.log("ELEPHANT!!!!!")
                         vPours.push(votesParGrp.pours.votant[l].acteurRef);
                         compteurPour++;
                     }
-                    if(i == 1)
-                        console.log(compteurPour)
                 }
-
-                //if (i == 1) {
-                /*    console.log("///Groupe n°" + j);
-                    console.log("POUR : " + compteurPour);
-                    console.log("taille tab pour " + vPours.length);
-                    console.log("CONTRE : " + compteurContre);
-                    console.log("taille tab contre " + vContres.length);
-                    console.log("//////");*/
-               // }
-
-                /*console.log("après le second if: " + compteurContre);
-                if (i == 1){
-                    console.log("dans le troisème if: " + compteurContre);
-                    console.log("POUR : " + compteurPour);
-                    console.log("CONTRE : " + compteurContre);
-                }*/
             }
 
             if (i == 1) {
@@ -115,10 +112,55 @@
             }
 
             //parcours des tableaux vPours et vContres pour créer les paires de votants
+            for (var m = 0; m < vPours.length; m++) {
+                for (var n = m + 1; n < vPours.length; n++) {
+                    if (vPours[m] < vPours[n]) {
+                        var ch = vPours[m] + "_" + vPours[n];
+                    } else {
+                        var ch = vPours[n] + "_" + vPours[m];
+                    }
+
+                    if (!(ch in votesCommuns)) {
+                        votesCommuns[ch] = 1;
+                    }
+                    else {
+                        votesCommuns[ch]++;
+                    }
+                }
+            }
+
+            for (var m = 0; m < vContres.length; m++) {
+                for (var n = m + 1; n < vContres.length; n++) {
+                    if (vContres[m] < vContres[n]) {
+                        var ch = vContres[m] + "_" + vContres[n];
+                    }
+                    else {
+                        var ch = vContres[n] + "_" + vContres[m];
+                    }
+
+                    if (!(ch in votesCommuns)) {
+                        votesCommuns[ch] = 1;
+                    }
+                    else {
+                        votesCommuns[ch]++;
+                    }
+                }
+            }
 
         }
+        //console.log(votesCommuns);
 
-      /* var link = svg.append("g")
+        var vcSup20 = {};
+
+        for(var key in votesCommuns){
+            if (votesCommuns[key] >= 20){
+                vcSup20[key] = votesCommuns[key];
+            }
+        }
+
+        console.log(vcSup20);
+
+      var link = svg.append("g")
        .attr("class", "links")
        .selectAll("line")
        .data(graph.links)
@@ -157,7 +199,7 @@
        node
        .attr("cx", function(d) { return d.x; })
        .attr("cy", function(d) { return d.y; });
-       }*/
+       }
     });
 
     function dragstarted(d) {
@@ -178,3 +220,5 @@
     }
 
 </script>
+
+TP6 Dataviz :)
