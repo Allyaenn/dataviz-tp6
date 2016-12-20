@@ -75,15 +75,15 @@
                 {
                     if (!(votesParGrp.contres.votant instanceof Array)) {
                         vPours.push(votesParGrp.contres.votant.acteurRef);
-                        if (infosActeurs.indexOf(votesParGrp.contres.votant.acteurRef) == -1){
-                            infosActeurs.push({id : votesParGrp.contres.votant.acteurRef, group : refParti});
+                        if (!(votesParGrp.contres.votant.acteurRef in infosActeurs)){
+                            infosActeurs[votesParGrp.contres.votant.acteurRef] = { group : refParti};
                         }
                     }
                     else {
                         for (var k = 0; k < votesParGrp.contres.votant.length; k++) {
                             vContres.push(votesParGrp.contres.votant[k].acteurRef);
-                            if (infosActeurs.indexOf(votesParGrp.contres.votant[k].acteurRef) == -1){
-                                infosActeurs.push({id : votesParGrp.contres.votant[k].acteurRef, group : refParti});
+                            if (!(votesParGrp.contres.votant[k].acteurRef in infosActeurs)){
+                                infosActeurs[votesParGrp.contres.votant[k].acteurRef] = { group : refParti};
                             }
                         }
                     }
@@ -93,15 +93,15 @@
                 {
                     if (!(votesParGrp.pours.votant instanceof Array)) {
                         vPours.push(votesParGrp.pours.votant.acteurRef);
-                        if (infosActeurs.indexOf(votesParGrp.pours.votant.acteurRef) == -1){
-                            infosActeurs.push({id : votesParGrp.pours.votant.acteurRef, group : refParti});
+                        if (!(votesParGrp.pours.votant.acteurRef in infosActeurs)){
+                            infosActeurs[votesParGrp.pours.votant.acteurRef] = { group : refParti};
                         }
                     }
                     else {
                         for (var l = 0; l < votesParGrp.pours.votant.length; l++) {
                             vPours.push(votesParGrp.pours.votant[l].acteurRef);
-                            if (infosActeurs.indexOf(votesParGrp.pours.votant[k].acteurRef) == -1){
-                                infosActeurs.push({id : votesParGrp.pours.votant[k].acteurRef, group : refParti});
+                            if (!(votesParGrp.pours.votant[l].acteurRef in infosActeurs)){
+                                infosActeurs[votesParGrp.pours.votant[l].acteurRef] = { group : refParti};
                             }
                         }
                     }
@@ -110,7 +110,6 @@
 
             //parcours des tableaux vPours et vContres pour créer les paires de votants
             for (var m = 0; m < vPours.length; m++) {
-
                 for (var n = m + 1; n < vPours.length; n++) {
                     if (vPours[m] < vPours[n]) {
                         var ch = vPours[m] + "_" + vPours[n];
@@ -128,7 +127,6 @@
             }
 
             for (var m = 0; m < vContres.length; m++) {
-
                 for (var n = m + 1; n < vContres.length; n++) {
                     if (vContres[m] < vContres[n]) {
                         var ch = vContres[m] + "_" + vContres[n];
@@ -147,17 +145,14 @@
             }
 
         }
-        console.log(personnes);
 
         var vcSup20 = {};
 
         for(var key in votesCommuns){
-            if (votesCommuns[key] >= 20){
+            if (votesCommuns[key] >= 40){
                 vcSup20[key] = votesCommuns[key];
             }
         }
-
-        //construction des objets nodes et links
 
         var grph = {};
 
@@ -181,8 +176,10 @@
         grph.nodes = [];
 
         for (var o = 0; o<personnes.length; o++){
-            grph.nodes.push({id: personnes[o], group : 1});
+            grph.nodes.push({id: personnes[o], group : parseInt(infosActeurs[personnes[o]].group)});
         }
+
+        console.log(infosActeurs);
 
 
       var link = svg.append("g")
