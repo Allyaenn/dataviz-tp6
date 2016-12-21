@@ -15,6 +15,7 @@
 </style>
 <svg width="960" height="600"></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
 <script>
 
     var svg = d3.select("svg"),
@@ -28,16 +29,20 @@
         .force("charge", d3.forceManyBody())
         .force("center", d3.forceCenter(width / 2, height / 2));
 
-    var acteurs = {};
+    var infosPartis = [], infosPersonnes = [];
 
-    d3.json("acteurs_simple2.json", function(error, data){
-        if(error) throw  error;
+    d3.json("acteurs_simple2.json", function(error, data) {
 
-        console.log (data);
+        for (var i = 0; i< data.export.organes.organe.length;i++){
+            infosPartis[data.export.organes.organe[i].uid] = data.export.organes.organe[i].libelle;
+        }
 
+        for (var i = 0; i< data.export.acteurs.acteur.length;i++){
+            infosPersonnes[data.export.acteurs.acteur[i].uid["#text"]] = {prenom : data.export.acteurs.acteur[i].etatCivil.ident.prenom,
+                                                                          nom : data.export.acteurs.acteur[i].etatCivil.ident.nom};
+        }
     });
-
-    console.log(acteurs);
+    //console.log(infosPartis);
 
     d3.json("scrutins.json", function(error, graph) {
         if (error) throw error;
@@ -46,7 +51,7 @@
         var year;
         var votesCommuns = {};
         var personnes = [];
-        var infosActeurs = [];
+        var acteursPartis = [];
 
         for (var i = 0; i<graph.scrutins.scrutin.length;i++) {
 
@@ -55,7 +60,6 @@
             {
                 scrutin2015.push(graph.scrutins.scrutin[i]);
             }
-
         }
 
         var vPours = [];
@@ -75,15 +79,15 @@
                 {
                     if (!(votesParGrp.contres.votant instanceof Array)) {
                         vPours.push(votesParGrp.contres.votant.acteurRef);
-                        if (!(votesParGrp.contres.votant.acteurRef in infosActeurs)){
-                            infosActeurs[votesParGrp.contres.votant.acteurRef] = { group : refParti};
+                        if (!(votesParGrp.contres.votant.acteurRef in acteursPartis)){
+                            acteursPartis[votesParGrp.contres.votant.acteurRef] = { group : refParti};
                         }
                     }
                     else {
                         for (var k = 0; k < votesParGrp.contres.votant.length; k++) {
                             vContres.push(votesParGrp.contres.votant[k].acteurRef);
-                            if (!(votesParGrp.contres.votant[k].acteurRef in infosActeurs)){
-                                infosActeurs[votesParGrp.contres.votant[k].acteurRef] = { group : refParti};
+                            if (!(votesParGrp.contres.votant[k].acteurRef in acteursPartis)){
+                                acteursPartis[votesParGrp.contres.votant[k].acteurRef] = { group : refParti};
                             }
                         }
                     }
@@ -93,15 +97,15 @@
                 {
                     if (!(votesParGrp.pours.votant instanceof Array)) {
                         vPours.push(votesParGrp.pours.votant.acteurRef);
-                        if (!(votesParGrp.pours.votant.acteurRef in infosActeurs)){
-                            infosActeurs[votesParGrp.pours.votant.acteurRef] = { group : refParti};
+                        if (!(votesParGrp.pours.votant.acteurRef in acteursPartis)){
+                            acteursPartis[votesParGrp.pours.votant.acteurRef] = { group : refParti};
                         }
                     }
                     else {
                         for (var l = 0; l < votesParGrp.pours.votant.length; l++) {
                             vPours.push(votesParGrp.pours.votant[l].acteurRef);
-                            if (!(votesParGrp.pours.votant[l].acteurRef in infosActeurs)){
-                                infosActeurs[votesParGrp.pours.votant[l].acteurRef] = { group : refParti};
+                            if (!(votesParGrp.pours.votant[l].acteurRef in acteursPartis)){
+                                acteursPartis[votesParGrp.pours.votant[l].acteurRef] = { group : refParti};
                             }
                         }
                     }
@@ -143,17 +147,19 @@
                     }
                 }
             }
-
         }
+
+        var nbVotesCommuns = 30;
 
         var vcSup20 = {};
 
         for(var key in votesCommuns){
-            if (votesCommuns[key] >= 40){
+            if (votesCommuns[key] >= nbVotesCommuns){
                 vcSup20[key] = votesCommuns[key];
             }
         }
 
+        //construction de la structure du graphe
         var grph = {};
 
         grph.links = [];
@@ -176,11 +182,8 @@
         grph.nodes = [];
 
         for (var o = 0; o<personnes.length; o++){
-            grph.nodes.push({id: personnes[o], group : parseInt(infosActeurs[personnes[o]].group)});
+            grph.nodes.push({id: personnes[o], group : acteursPartis[personnes[o]].group});
         }
-
-        console.log(infosActeurs);
-
 
       var link = svg.append("g")
        .attr("class", "links")
@@ -195,14 +198,14 @@
        .data(grph.nodes)
        .enter().append("circle")
        .attr("r", 5)
-       .attr("fill", function(d) { return d; })
+       .attr("fill", function(d) { return color(d.group); })
        .call(d3.drag()
        .on("start", dragstarted)
        .on("drag", dragged)
        .on("end", dragended));
 
        node.append("title")
-       .text(function(d) { return d.id; });
+       .text(function(d) { return infosPersonnes[d.id].prenom + " " + infosPersonnes[d.id].nom + "\n" + infosPartis[d.group];});
 
        simulation
        .nodes(grph.nodes)
